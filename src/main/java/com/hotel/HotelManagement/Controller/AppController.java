@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -62,10 +63,10 @@ public class AppController {
     }
 
     @RequestMapping("/addUser")
-    public String addUser(ModelMap map, Users user) {
+    public String addUser(ModelMap map, @RequestBody Users user) {
         String emailRegex = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}$";
         String passRegex = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=])(?=\\S+$).{8,}$";
-
+        this.passwordEncoder = new BCryptPasswordEncoder();
         Users emailexists = repo.findByEmail(user.getEmail());
         Users phoneExists = repo.findByPhone(user.getPhone());
         if (emailexists != null) {
@@ -86,6 +87,8 @@ public class AppController {
             map.put("passerror", "Enter the valid Password");
             return "/signup";
         } else {
+            String encoded = this.passwordEncoder.encode(user.getPassword());
+            user.setPassword(encoded);
             repo.save(user);
             return "success";
         }
